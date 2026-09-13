@@ -41,3 +41,8 @@ class ExecutionTrace:
     result: str
     verified: bool
     memory_written: bool
+    provider: str = "unknown"
+    model: str = "unknown"
+    latency_ms: float = 0.0
+    input_tokens: int | None = None
+    output_tokens: int | None = None
