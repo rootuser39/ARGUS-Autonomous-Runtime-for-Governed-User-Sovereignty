@@ -10,14 +10,15 @@ This repository is being built for the Nebius x NVIDIA Global AI Hackathon 2026,
 
 ## Current milestone
 
-Build the minimum complete loop:
+The first live inference path now exists:
 
 1. Parse a user request into structured intent.
 2. Convert intent into an execution plan.
-3. Select an appropriate NVIDIA/Nemotron model tier.
-4. Execute through a model/tool adapter.
-5. Persist a compact memory record.
-6. Return an auditable execution trace.
+3. Select an NVIDIA Nemotron tier.
+4. Execute through either the deterministic stub or Nebius Token Factory.
+5. Capture provider/model/latency/token telemetry.
+6. Persist verified output into memory.
+7. Return an auditable execution trace.
 
 ## Architecture
 
@@ -34,7 +35,9 @@ Planner
 Model Router
   |
   v
-Execution / Tools
+Inference Provider
+  |-- StubProvider
+  `-- NebiusProvider -> Token Factory -> Nemotron
   |
   v
 Verification
@@ -50,6 +53,7 @@ Planned modules:
 - `argus/core/router` — model selection policy
 - `argus/core/memory` — persistent state
 - `argus/core/orchestrator` — end-to-end execution loop
+- `argus/providers` — inference provider adapters
 - `argus/agents` — specialist agents
 - `argus/tools` — governed tool adapters
 - `argus/permissions` — capability and approval policy
@@ -64,11 +68,45 @@ Planned modules:
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -e .
+pip install -e ".[dev]"
+
+# deterministic local path
 argus "Analyze my AI fabric project and identify the most important missing component"
 ```
 
-The initial implementation uses a deterministic local stub so the architecture can be tested before Nebius credentials are introduced.
+### Nebius Token Factory
+
+Set your key locally. Never commit it.
+
+```bash
+export NEBIUS_API_KEY="..."
+argus --provider nebius "Analyze my AI fabric project"
+```
+
+On Windows PowerShell:
+
+```powershell
+$env:NEBIUS_API_KEY="..."
+argus --provider nebius "Analyze my AI fabric project"
+```
+
+To inspect the model IDs currently visible to your Token Factory account:
+
+```bash
+argus --provider nebius --list-models
+```
+
+Model IDs are configurable through environment variables because Token Factory availability changes by account and model IDs are case-sensitive. See `.env.example`.
+
+## Current routing defaults
+
+| ARGUS tier | Token Factory model |
+| --- | --- |
+| `nemotron-nano` | `nvidia/Nemotron-3_5-Lightning` |
+| `nemotron-super` | `nvidia/nemotron-3-super-120b-a12b` |
+| `nemotron-ultra` | `nvidia/Nemotron-3-Ultra-550b-a55b` |
+
+These defaults can be overridden without changing source code.
 
 ## Design principles
 
