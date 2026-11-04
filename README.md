@@ -17,7 +17,7 @@ The first live inference path now exists:
 3. Select an NVIDIA Nemotron tier.
 4. Execute through either the deterministic stub or Nebius Token Factory.
 5. Capture provider/model/latency/token telemetry.
-6. Persist verified output into memory.
+6. Optionally persist execution traces to local memory, only with explicit consent.
 7. Return an auditable execution trace.
 
 ## Architecture
@@ -70,8 +70,11 @@ python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 
-# deterministic local path
+# deterministic local path (does not persist prompts or responses)
 argus "Analyze my AI fabric project and identify the most important missing component"
+
+# explicit opt-in: save the full request and execution trace locally
+argus --remember --memory-path .argus/memory.jsonl "Summarize this note"
 ```
 
 ### Nebius Token Factory
@@ -107,6 +110,14 @@ Model IDs are configurable through environment variables because Token Factory a
 | `nemotron-ultra` | `nvidia/Nemotron-3-Ultra-550b-a55b` |
 
 These defaults can be overridden without changing source code.
+
+## Privacy, verification, and current boundaries
+
+- **Memory is off by default.** The CLI only writes a JSONL journal with `--remember`. Library callers must pass `persist_memory=True`. The journal contains **full requests and generated responses**, not redacted summaries. Only opt in if that is acceptable for your data.
+- Newly created journal files use owner-only permissions on POSIX systems. Existing files and Windows ACLs require independent review. Do not put sensitive credentials in prompts.
+- The trace's `verified` field currently means **non-empty response only**, not truth, safety, task completion, or a successfully executed tool. The `verification_method` field makes that explicit.
+- Plans are descriptive; the current runtime does **not** execute arbitrary tools. Live Nebius requests leave the local machine when selected.
+- See [Security & privacy](SECURITY.md) and [Contributing](CONTRIBUTING.md).
 
 ## Design principles
 

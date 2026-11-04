@@ -27,7 +27,7 @@ def test_empty_request_is_rejected() -> None:
 
 def test_complete_loop_writes_verified_memory(tmp_path: Path) -> None:
     memory = JsonlMemory(tmp_path / "memory.jsonl")
-    trace = Orchestrator(memory=memory).handle(
+    trace = Orchestrator(memory=memory, persist_memory=True).handle(
         "Analyze my AI fabric project and identify the most important missing component"
     )
 
