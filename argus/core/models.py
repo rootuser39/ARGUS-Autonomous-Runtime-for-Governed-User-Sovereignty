@@ -46,3 +46,4 @@ class ExecutionTrace:
     latency_ms: float = 0.0
     input_tokens: int | None = None
     output_tokens: int | None = None
+    verification_method: str = "non_empty_response_only"
