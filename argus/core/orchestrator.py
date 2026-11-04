@@ -52,7 +52,8 @@ class Orchestrator:
         )
 
         if verified and self.persist_memory:
-            self.memory.write(trace)
-            trace = replace(trace, memory_written=True)
+            persisted_trace = replace(trace, memory_written=True)
+            self.memory.write(persisted_trace)
+            trace = persisted_trace
 
         return trace
