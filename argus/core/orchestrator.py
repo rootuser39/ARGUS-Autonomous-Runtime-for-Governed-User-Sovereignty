@@ -19,12 +19,14 @@ class Orchestrator:
         router: ModelRouter | None = None,
         provider: InferenceProvider | None = None,
         memory: JsonlMemory | None = None,
+        persist_memory: bool = False,
     ) -> None:
         self.intent_engine = intent_engine or IntentEngine()
         self.planner = planner or Planner()
         self.router = router or ModelRouter()
         self.provider = provider or StubProvider()
         self.memory = memory or JsonlMemory()
+        self.persist_memory = persist_memory
 
     def handle(self, request: str) -> ExecutionTrace:
         intent = self.intent_engine.parse(request)
@@ -32,8 +34,7 @@ class Orchestrator:
         route = self.router.choose(intent, plan)
         inference = self.provider.generate(intent.objective, route.model_tier)
 
-        # Bootstrap verification: a provider must return non-empty output.
-        # A semantic verifier becomes its own stage in a later milestone.
+        # A non-empty response is a liveness check, not semantic or factual verification.
         verified = bool(inference.text.strip())
         trace = ExecutionTrace(
             intent=intent,
@@ -47,9 +48,10 @@ class Orchestrator:
             latency_ms=inference.latency_ms,
             input_tokens=inference.input_tokens,
             output_tokens=inference.output_tokens,
+            verification_method="non_empty_response_only",
         )
 
-        if verified:
+        if verified and self.persist_memory:
             self.memory.write(trace)
             trace = replace(trace, memory_written=True)
 
