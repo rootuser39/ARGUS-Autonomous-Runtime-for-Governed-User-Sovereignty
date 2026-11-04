@@ -31,6 +31,7 @@ def test_opt_in_persists_trace(tmp_path: Path) -> None:
     trace = Orchestrator(memory=memory, persist_memory=True).handle("Summarize private notes")
     assert trace.memory_written
     assert memory.tail(1)[0]["intent"]["objective"] == "Summarize private notes"
+    assert memory.tail(1)[0]["memory_written"] is True
 
 
 def test_empty_response_never_persists(tmp_path: Path) -> None:
